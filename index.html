@@ -827,7 +827,7 @@ function tySwipeStart(e) { tySwipeX = e.touches[0].clientX; }
 function tySwipeEnd(e) {
   const dx = e.changedTouches[0].clientX - tySwipeX;
   if (Math.abs(dx) > 50) {
-    if (dx < 0) prevDay();
+    if (dx > 0) prevDay();
     else nextDay();
   }
 }
