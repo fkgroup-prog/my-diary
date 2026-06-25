@@ -833,39 +833,41 @@ function renderTenYear() {
 }
 
 // ══ SEARCH TAB ══
+function getSearchResultsHtml() {
+  if (!searchQuery.trim() && !searchTagFilter) return '';
+  const q = searchQuery.trim().toLowerCase();
+  let dates = Object.keys(state.days).sort((a,b)=>b.localeCompare(a));
+  dates = dates.filter(date => {
+    const day = state.days[date];
+    return (day.entries||[]).some(e => {
+      const tagMatch = !searchTagFilter || e.tags.includes(searchTagFilter);
+      const textMatch = !q || e.memo.toLowerCase().includes(q) || e.tags.some(t=>t.toLowerCase().includes(q));
+      return tagMatch && textMatch;
+    });
+  });
+  if (dates.length === 0) return `<div class="empty"><div class="icon">🔍</div><p>見つかりませんでした</p></div>`;
+  return dates.map(d => renderDayCard(d, searchTagFilter, searchQuery.trim())).join('');
+}
+
+function onSearchInput(e, val) {
+  if (e.isComposing) return;
+  searchQuery = val;
+  const r = document.getElementById('searchResults');
+  if (r) r.innerHTML = getSearchResultsHtml();
+}
+
 function renderSearch() {
   const tagChips = ['すべて',...state.tags].map(t=>
     `<span class="filter-chip${(t==='すべて'&&!searchTagFilter)||searchTagFilter===t?' active':''}" onclick="setSearchTag('${t}')">${t}</span>`
   ).join('');
 
-  let results = '';
-  if (searchQuery.trim() || searchTagFilter) {
-    const q = searchQuery.trim().toLowerCase();
-    let dates = Object.keys(state.days).sort((a,b)=>b.localeCompare(a));
-
-    dates = dates.filter(date => {
-      const day = state.days[date];
-      return (day.entries||[]).some(e => {
-        const tagMatch = !searchTagFilter || e.tags.includes(searchTagFilter);
-        const textMatch = !q || e.memo.toLowerCase().includes(q) || e.tags.some(t=>t.toLowerCase().includes(q));
-        return tagMatch && textMatch;
-      });
-    });
-
-    if (dates.length === 0) {
-      results = `<div class="empty"><div class="icon">🔍</div><p>見つかりませんでした</p></div>`;
-    } else {
-      results = dates.map(d => renderDayCard(d, searchTagFilter, searchQuery.trim())).join('');
-    }
-  }
-
   return `
     <div class="search-box">
       <input type="text" placeholder="メモ・タグを検索…" value="${escHtml(searchQuery)}"
-        oninput="searchQuery=this.value;render()" autofocus>
+        oninput="onSearchInput(event,this.value)" autofocus>
     </div>
     <div class="filter-row">${tagChips}</div>
-    ${results}`;
+    <div id="searchResults">${getSearchResultsHtml()}</div>`;
 }
 
 function setSearchTag(t) {
