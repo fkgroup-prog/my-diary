@@ -606,7 +606,7 @@ function renderWrite() {
     <div class="card">
       <div class="section-label">日付</div>
       <div class="date-row">
-        <input type="date" id="writeDate" value="${writeDate}" max="${today()}" onchange="onDateChange(this.value)">
+        <input type="date" id="writeDate" value="${writeDate}" onchange="onDateChange(this.value)">
         <button class="btn-today" onclick="onDateChange('${today()}')">今日</button>
       </div>
       <div class="divider"></div>
