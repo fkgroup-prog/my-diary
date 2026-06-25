@@ -1116,6 +1116,8 @@ updateSyncUI();
 // Service Worker registration
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js', { updateViaCache: 'none' }).catch(() => {});
+  // Auto-reload when new SW takes over
+  navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
 }
 </script>
 
