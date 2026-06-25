@@ -562,6 +562,7 @@ const WEATHERS = ['☀️','🌤️','⛅','🌧️','⛈️','🌨️','🌫️
 // ── TAB ──
 function switchTab(tab) {
   currentTab = tab;
+  if (tab === 'write' && !editingDayDate) initWriteForDate(today());
   document.querySelectorAll('.tabs button').forEach((b,i)=>{
     b.classList.toggle('active', ['write','list','tenyear','search','tags','settings'][i]===tab);
   });
@@ -642,6 +643,7 @@ function renderSubForm(e, i) {
 }
 
 function onDateChange(date) {
+  editingDayDate = null;
   writeDate = date;
   document.getElementById('writeDate') && (document.getElementById('writeDate').value = date);
   const day = state.days[date];
@@ -793,7 +795,7 @@ function openPhotos(date) {
 }
 
 function gotoEdit(date) {
-  writeDate = date;
+  editingDayDate = date;
   switchTab('write');
 }
 
