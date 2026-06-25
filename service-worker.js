@@ -1,7 +1,5 @@
-const CACHE = 'diary-v3';
-const ASSETS = [
-  '/my-diary/',
-  '/my-diary/index.html',
+const CACHE = 'diary-v4';
+const STATIC = [
   '/my-diary/manifest.json',
   '/my-diary/icon-192.png',
   '/my-diary/icon-512.png',
@@ -9,7 +7,7 @@ const ASSETS = [
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(ASSETS).catch(() => {}))
+    caches.open(CACHE).then(cache => cache.addAll(STATIC).catch(() => {}))
   );
   self.skipWaiting();
 });
@@ -24,21 +22,34 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Only cache same-origin GET requests
   if (event.request.method !== 'GET') return;
   if (!event.request.url.startsWith(self.location.origin)) return;
 
-  event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
-      return fetch(event.request).then(res => {
-        // Cache successful same-origin responses
-        if (res.ok && res.url.startsWith(self.location.origin)) {
-          const clone = res.clone();
-          caches.open(CACHE).then(cache => cache.put(event.request, clone));
+  const url = new URL(event.request.url);
+  const isHtml = url.pathname.endsWith('.html') || url.pathname.endsWith('/');
+
+  if (isHtml) {
+    // Network-first for HTML: always get latest, fall back to cache offline
+    event.respondWith(
+      fetch(event.request).then(res => {
+        if (res.ok) {
+          caches.open(CACHE).then(c => c.put(event.request, res.clone()));
         }
         return res;
-      }).catch(() => cached);
-    })
-  );
+      }).catch(() => caches.match(event.request))
+    );
+  } else {
+    // Cache-first for static assets
+    event.respondWith(
+      caches.match(event.request).then(cached => {
+        if (cached) return cached;
+        return fetch(event.request).then(res => {
+          if (res.ok) {
+            caches.open(CACHE).then(c => c.put(event.request, res.clone()));
+          }
+          return res;
+        });
+      })
+    );
+  }
 });
