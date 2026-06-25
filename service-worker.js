@@ -1,4 +1,4 @@
-const CACHE = 'diary-v5';
+const CACHE = 'diary-v6';
 const STATIC = [
   '/my-diary/manifest.json',
   '/my-diary/icon-192.png',
@@ -28,28 +28,19 @@ self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   const isHtml = url.pathname.endsWith('.html') || url.pathname.endsWith('/');
 
-  if (isHtml) {
-    // Always bypass HTTP cache for HTML to ensure latest version
-    event.respondWith(
-      fetch(event.request, { cache: 'no-store' }).then(res => {
+  // HTML: SW does not intercept — browser fetches directly from network
+  if (isHtml) return;
+
+  // Static assets: cache-first
+  event.respondWith(
+    caches.match(event.request).then(cached => {
+      if (cached) return cached;
+      return fetch(event.request).then(res => {
         if (res.ok) {
           caches.open(CACHE).then(c => c.put(event.request, res.clone()));
         }
         return res;
-      }).catch(() => caches.match(event.request))
-    );
-  } else {
-    // Cache-first for static assets
-    event.respondWith(
-      caches.match(event.request).then(cached => {
-        if (cached) return cached;
-        return fetch(event.request).then(res => {
-          if (res.ok) {
-            caches.open(CACHE).then(c => c.put(event.request, res.clone()));
-          }
-          return res;
-        });
-      })
-    );
-  }
+      });
+    })
+  );
 });
