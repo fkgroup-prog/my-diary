@@ -850,7 +850,6 @@ function getSearchResultsHtml() {
 }
 
 function onSearchInput(e, val) {
-  if (e.isComposing) return;
   searchQuery = val;
   const r = document.getElementById('searchResults');
   if (r) r.innerHTML = getSearchResultsHtml();
