@@ -1,4 +1,4 @@
-const CACHE = 'diary-v4';
+const CACHE = 'diary-v5';
 const STATIC = [
   '/my-diary/manifest.json',
   '/my-diary/icon-192.png',
@@ -29,9 +29,9 @@ self.addEventListener('fetch', event => {
   const isHtml = url.pathname.endsWith('.html') || url.pathname.endsWith('/');
 
   if (isHtml) {
-    // Network-first for HTML: always get latest, fall back to cache offline
+    // Always bypass HTTP cache for HTML to ensure latest version
     event.respondWith(
-      fetch(event.request).then(res => {
+      fetch(event.request, { cache: 'no-store' }).then(res => {
         if (res.ok) {
           caches.open(CACHE).then(c => c.put(event.request, res.clone()));
         }
