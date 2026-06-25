@@ -929,7 +929,8 @@ function renderTags() {
 function renderSettings() {
   const tagItems = state.tags.map((t,i)=>`
     <div class="tag-manage-row">
-      <span class="tag-chip" style="cursor:default">${t}</span>
+      <span class="tag-chip" style="cursor:default;flex:1">${t}</span>
+      <button class="btn btn-ghost" onclick="renameTag(${i})">名前変更</button>
       <button class="btn btn-danger" onclick="deleteTag(${i})">削除</button>
     </div>`).join('');
 
@@ -1004,6 +1005,19 @@ function addTag() {
   if (state.tags.includes(tag)) { showToast('同じタグがすでにあります'); return; }
   state.tags.push(tag);
   save(); showToast(`「${tag}」を追加しました`); render();
+}
+
+function renameTag(i) {
+  const oldName = state.tags[i];
+  const newName = prompt(`「${oldName}」の新しい名前`, oldName);
+  if (!newName || newName.trim() === '' || newName.trim() === oldName) return;
+  const trimmed = newName.trim();
+  if (state.tags.includes(trimmed)) { showToast('そのタグ名はすでに存在します'); return; }
+  state.tags[i] = trimmed;
+  Object.values(state.days).forEach(day => {
+    (day.entries||[]).forEach(e => { e.tags = e.tags.map(t => t === oldName ? trimmed : t); });
+  });
+  save(); showToast(`「${oldName}」→「${trimmed}」に変更しました`); render();
 }
 
 function deleteTag(i) {
