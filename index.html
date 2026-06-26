@@ -396,9 +396,15 @@ async function driveGet(url) {
 function handleTokenExpired() {
   driveToken = null;
   syncStatus = 'noauth';
-  localStorage.removeItem('diary_google_hint');
   updateSyncUI();
-  showToast('Driveの認証が切れました。再ログインしてください');
+  // Try silent re-login before asking user
+  const hint = localStorage.getItem('diary_google_hint');
+  if (hint && tokenClient) {
+    tokenClient.requestAccessToken({ prompt: 'none', hint });
+  } else {
+    localStorage.removeItem('diary_google_hint');
+    showToast('🔑 Driveの認証が切れました。設定からログインしてください');
+  }
 }
 
 async function getDriveFileId() {
@@ -479,7 +485,7 @@ function updateSyncUI() {
   if (!badge) return;
 
   const map = {
-    noauth:  { icon: '',    title: 'Drive未接続（設定でログイン）' },
+    noauth:  { icon: '🔑',  title: 'Drive未接続（タップでログイン）' },
     idle:    { icon: '☁️',  title: 'Drive接続済み' },
     syncing: { icon: '⏳',  title: '同期中…' },
     synced:  { icon: '☁️✓', title: '同期済み' },
@@ -491,8 +497,13 @@ function updateSyncUI() {
 }
 
 function onSyncBadgeClick() {
-  if (!driveToken) switchTab('settings');
-  else syncFromDrive().then(() => showToast('同期しました'));
+  if (!driveToken) {
+    const hint = localStorage.getItem('diary_google_hint');
+    if (hint && tokenClient) tokenClient.requestAccessToken({ prompt: 'none', hint });
+    else switchTab('settings');
+  } else {
+    syncFromDrive().then(() => showToast('同期しました'));
+  }
 }
 
 // ── STATE ──
