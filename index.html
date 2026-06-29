@@ -249,6 +249,20 @@ main { padding: 14px; max-width: 560px; margin: 0 auto; padding-bottom: 40px; }
   color: var(--accent); min-width: 28px; text-align: right;
 }
 .tag-count-arrow { font-size: 18px; color: var(--ink-ghost); }
+.tag-date-filter {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.tag-date-filter input[type="date"] {
+  flex: 1; min-width: 120px; padding: 8px 10px; border-radius: 8px;
+  border: 1.5px solid var(--rule); font-size: 13px; font-family: inherit;
+  background: var(--page); color: var(--ink); outline: none;
+}
+.tag-date-filter input[type="date"]:focus { border-color: var(--accent); }
+.tag-date-filter .sep { font-size: 13px; color: var(--ink-ghost); flex-shrink: 0; }
+.tag-filter-label {
+  font-size: 11px; color: var(--ink-ghost); margin-bottom: 8px;
+}
 
 /* SETTINGS */
 .tag-manage-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
@@ -520,6 +534,8 @@ let tyMonth = (new Date().getMonth()+1).toString().padStart(2,'0');
 let tyDay = new Date().getDate().toString().padStart(2,'0');
 let searchQuery = '';
 let searchTagFilter = null;
+let tagDateFrom = '';
+let tagDateTo = '';
 
 // ── STORAGE ──
 function save(syncDrive = true) {
@@ -967,20 +983,51 @@ function renderTags() {
   if (state.tags.length === 0) {
     return `<div class="empty"><div class="icon">🏷️</div><p>タグがまだありません<br><small style="color:var(--ink-ghost)">設定でタグを追加できます</small></p></div>`;
   }
+
+  // Filter days by date range
+  let dates = Object.keys(state.days);
+  if (tagDateFrom) dates = dates.filter(d => d >= tagDateFrom);
+  if (tagDateTo)   dates = dates.filter(d => d <= tagDateTo);
+
   const counts = {};
   state.tags.forEach(t => counts[t] = 0);
-  Object.values(state.days).forEach(day => {
-    (day.entries||[]).forEach(e => {
+  dates.forEach(date => {
+    (state.days[date].entries||[]).forEach(e => {
       e.tags.forEach(t => { if (counts[t] !== undefined) counts[t]++; });
     });
   });
+
+  const isFiltered = tagDateFrom || tagDateTo;
+  const filterLabel = isFiltered
+    ? `<div class="tag-filter-label">📅 ${tagDateFrom||'…'} 〜 ${tagDateTo||'…'} の集計（${dates.length}日分）</div>`
+    : `<div class="tag-filter-label">全期間の集計（${dates.length}日分）</div>`;
+
   const items = state.tags.map(t => `
     <div class="tag-count-item" onclick="gotoTagSearch('${escHtml(t)}')">
       <span class="tag-chip">${escHtml(t)}</span>
       <span class="tag-count-num">${counts[t]}</span>
       <span class="tag-count-arrow">›</span>
     </div>`).join('');
-  return `<div class="card"><div class="section-label">タグ一覧（クリックで検索）</div>${items}</div>`;
+
+  const clearBtn = isFiltered
+    ? `<button class="btn-today" onclick="tagDateFrom='';tagDateTo='';render()" style="white-space:nowrap">クリア</button>`
+    : '';
+
+  return `
+    <div class="card">
+      <div class="section-label">期間フィルター</div>
+      <div class="tag-date-filter">
+        <input type="date" value="${tagDateFrom}" onchange="tagDateFrom=this.value;render()">
+        <span class="sep">〜</span>
+        <input type="date" value="${tagDateTo}" onchange="tagDateTo=this.value;render()">
+        ${clearBtn}
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-label">タグ一覧（タップで検索）</div>
+      ${filterLabel}
+      ${items}
+    </div>`;
 }
 
 // ══ SETTINGS TAB ══
