@@ -536,6 +536,8 @@ let searchQuery = '';
 let searchTagFilter = null;
 let tagDateFrom = '';
 let tagDateTo = '';
+let searchDateFrom = '';
+let searchDateTo = '';
 
 // ── STORAGE ──
 function save(syncDrive = true) {
@@ -932,9 +934,11 @@ function renderTenYear() {
 
 // ══ SEARCH TAB ══
 function getSearchResultsHtml() {
-  if (!searchQuery.trim() && !searchTagFilter) return '';
+  if (!searchQuery.trim() && !searchTagFilter && !searchDateFrom && !searchDateTo) return '';
   const q = searchQuery.trim().toLowerCase();
   let dates = Object.keys(state.days).sort((a,b)=>b.localeCompare(a));
+  if (searchDateFrom) dates = dates.filter(d => d >= searchDateFrom);
+  if (searchDateTo)   dates = dates.filter(d => d <= searchDateTo);
   dates = dates.filter(date => {
     const day = state.days[date];
     return (day.entries||[]).some(e => {
@@ -958,12 +962,20 @@ function renderSearch() {
     `<span class="filter-chip${(t==='すべて'&&!searchTagFilter)||searchTagFilter===t?' active':''}" onclick="setSearchTag('${t}')">${t}</span>`
   ).join('');
 
+  const dateBar = (searchDateFrom || searchDateTo)
+    ? `<div class="filter-row" style="align-items:center">
+        <span style="font-size:12px;color:var(--ink-ghost)">📅 ${searchDateFrom||'…'} 〜 ${searchDateTo||'…'}</span>
+        <span class="filter-chip" onclick="searchDateFrom='';searchDateTo='';render()" style="margin-left:auto">期間クリア</span>
+      </div>`
+    : '';
+
   return `
     <div class="search-box">
       <input type="text" placeholder="メモ・タグを検索…" value="${escHtml(searchQuery)}"
         oninput="onSearchInput(event,this.value)" autofocus>
     </div>
     <div class="filter-row">${tagChips}</div>
+    ${dateBar}
     <div id="searchResults">${getSearchResultsHtml()}</div>`;
 }
 
@@ -975,6 +987,8 @@ function setSearchTag(t) {
 function gotoTagSearch(tag) {
   searchQuery = '';
   searchTagFilter = tag;
+  searchDateFrom = tagDateFrom;
+  searchDateTo = tagDateTo;
   switchTab('search');
 }
 
