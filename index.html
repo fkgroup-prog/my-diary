@@ -178,18 +178,18 @@ main { padding: 14px; max-width: 560px; margin: 0 auto; padding-bottom: 40px; }
 
 /* SUB-ENTRY ROW */
 .sub-entry {
-  display: flex; gap: 10px; align-items: flex-start;
+  display: flex; flex-direction: column; gap: 5px;
   padding: 8px 0; border-bottom: 1px solid var(--rule);
 }
 .sub-entry:last-child { border-bottom: none; }
-.sub-entry-tags { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; flex-shrink: 0; max-width: 40%; }
+.sub-entry-tags { display: flex; flex-wrap: wrap; gap: 4px; }
 .sub-entry-tag {
   font-size: 11px; padding: 3px 8px; border-radius: 12px;
   background: var(--tag-bg); border: 1px solid var(--tag-border);
   color: var(--accent-mid); font-weight: 600; white-space: nowrap;
 }
-.sub-entry-memo { font-size: 14px; line-height: 1.6; color: var(--ink); flex: 1; white-space: pre-wrap; }
-.sub-entry-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.sub-entry-memo { font-size: 14px; line-height: 1.6; color: var(--ink); white-space: pre-wrap; }
+.sub-entry-actions { display: flex; gap: 4px; justify-content: flex-end; }
 .btn-xs {
   padding: 3px 8px; border-radius: 5px; border: none;
   font-size: 11px; font-weight: 700; cursor: pointer;
